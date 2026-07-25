@@ -1,0 +1,40 @@
+{
+  "name": "monarch-mcp-server",
+  "version": "2.0.0",
+  "description": "MCP server for Monarch Money — claude.ai-compatible custom connector with OAuth 2.1 + Streamable HTTP, plus a stdio entrypoint for local clients",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "monarch-mcp-server": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "watch": "tsc --watch"
+  },
+  "keywords": [
+    "mcp",
+    "monarch",
+    "monarch-money",
+    "finance"
+  ],
+  "author": "Alex Priest",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "axios": "^1.12.2",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "express-rate-limit": "^8.2.1",
+    "graphql-request": "^7.2.0",
+    "helmet": "^8.1.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  }
+}
