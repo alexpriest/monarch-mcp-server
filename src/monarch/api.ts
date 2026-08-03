@@ -539,27 +539,31 @@ export class MonarchMoneyAPI {
     startDate?: string,
     endDate?: string
   ): Promise<any[]> {
-    let filters = `accountId: "${accountId}"`;
-    if (startDate) {
-      filters += `, startDate: "${startDate}"`;
-    }
-    if (endDate) {
-      filters += `, endDate: "${endDate}"`;
-    }
-
+    // Monarch exposes balance history as snapshotsForAccount(accountId:), taking the id as a
+    // direct UUID argument. The accountSnapshots(filters:) field this used to query no longer
+    // exists — and since the API masks every validation error as a generic 500-shaped 400, it
+    // failed indistinguishably from a server fault. Only `date` and `signedBalance` are
+    // selectable; there is no `balance` field and no date arguments, so the range filter is
+    // applied here. ISO dates sort lexicographically, so string compares are safe.
     const query = `
-      query GetAccountSnapshots {
-        accountSnapshots(filters: {${filters}}) {
+      query GetAccountSnapshots($id: UUID!) {
+        snapshots: snapshotsForAccount(accountId: $id) {
           date
-          balance
           signedBalance
         }
       }
     `;
 
     try {
-      const data: any = await this.request(query);
-      return data.accountSnapshots || [];
+      const data: any = await this.request(query, { id: accountId });
+      let snapshots: any[] = data.snapshots || [];
+      if (startDate) {
+        snapshots = snapshots.filter((s) => s.date >= startDate);
+      }
+      if (endDate) {
+        snapshots = snapshots.filter((s) => s.date <= endDate);
+      }
+      return snapshots;
     } catch (error: any) {
       if (
         error.message.includes('401') ||
