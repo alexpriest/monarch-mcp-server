@@ -2,7 +2,7 @@
 
 MCP server for Monarch Money — exposes accounts, transactions, budgets, categories, net worth, and portfolio to claude.ai (as a custom connector over Streamable HTTP + OAuth 2.1) or to any local MCP client over stdio.
 
-Ported from the local stdio server at `~/Code/tools/monarch-mcp/` (a fork of `whitebirchio/monarch-mcp`), following the pattern proven in [`strava-mcp-server`](../strava-mcp-server). The 11 tools and every GraphQL query are unchanged.
+Ported from the local stdio server at `~/Code/tools/monarch-mcp/` (a fork of `whitebirchio/monarch-mcp`), following the pattern proven in [`strava-mcp-server`](../strava-mcp-server). The 11 tools carried over unchanged; one GraphQL query has since been rewritten (see [Gotchas](#gotchas-already-handled)).
 
 ## Tools
 
@@ -19,7 +19,7 @@ All read-only.
 | `get_net_worth` | Assets, liabilities, and the net figure |
 | `get_monthly_summary` | Income, expenses, savings for one month |
 | `get_categories` | All Monarch categories and their groups |
-| `get_account_snapshots` | Balance history for one account |
+| `get_account_snapshots` | Balance history for one account (`date` + `signedBalance`; date range filtered client-side) |
 | `get_portfolio` | Holdings, basis, performance, benchmarks |
 
 ## How auth works
@@ -177,3 +177,11 @@ Four things silently break the claude.ai connector; all four are solved in `stre
 - The approval form is deliberately **not** single-use; claude.ai re-POSTs it. The auth *code* is the single-use boundary.
 
 Plus one this server fixes that strava and hevy don't: `app.set('trust proxy', 1)`. Behind Railway's proxy, `req.ip` is the proxy's address for every request, so the rate limiter buckets all clients together and the 1000-request window becomes global instead of per-client.
+
+### Monarch's API hides why a query failed
+
+Every GraphQL error comes back as the same generic 400 — `Something went wrong while processing: None on request_id: None.` A field name that doesn't exist returns a byte-identical response to a genuine server fault, and introspection is refused for non-admin users. `get_account_snapshots` looked like a Monarch outage for exactly this reason; it was querying `accountSnapshots(filters:)`, a field that no longer exists.
+
+The live field is `snapshotsForAccount(accountId: $id)` — a direct `UUID!` argument rather than a filter object, exposing only `date` and `signedBalance`, and accepting **no** date arguments (hence the client-side range filter in `api.ts`).
+
+When a query 400s here, calibrate before believing the message: send a deliberately bogus field name and compare. Identical response means your query is wrong, not the server. Since you only learn from successes, probe candidate shapes in batches — and check the [`monarchmoney`](https://github.com/hammem/monarchmoney) Python library for current query shapes, which is how this one was found.
