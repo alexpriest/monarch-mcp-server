@@ -1,6 +1,14 @@
-# Monarch MCP Server
+# monarch-mcp-server
 
-MCP server for Monarch Money — exposes accounts, transactions, budgets, categories, net worth, and portfolio to claude.ai (as a custom connector over Streamable HTTP + OAuth 2.1) or to any local MCP client over stdio.
+A read-only Monarch Money MCP server, installable as a claude.ai connector.
+
+## Status
+
+Shipped — deployed on Railway as a claude.ai custom connector; every tool is read-only.
+
+## License
+
+Not licensed for reuse.
 
 Ported from the local stdio server at `~/Code/tools/monarch-mcp/` (a fork of `whitebirchio/monarch-mcp`), following the pattern proven in [`strava-mcp-server`](../strava-mcp-server). The 11 tools carried over unchanged; one GraphQL query has since been rewritten (see [Gotchas](#gotchas-already-handled)).
 
