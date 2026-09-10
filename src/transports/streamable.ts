@@ -60,7 +60,11 @@ export async function createStreamableApp(
           scriptSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", 'data:'],
-          formAction: ["'self'", 'https://claude.ai', 'https://*.claude.ai', 'http://localhost', 'http://127.0.0.1'],
+      // A CSP source with no port matches only the scheme's default port (80),
+      // so bare 'http://localhost' never matches Claude Code's OAuth callback on a
+      // random high port. Without :* the browser silently refuses the 302 from
+      // /approve and the approval page appears to reload.
+          formAction: ["'self'", 'https://claude.ai', 'https://*.claude.ai', 'http://localhost:*', 'http://127.0.0.1:*'],
         },
       },
       crossOriginOpenerPolicy: false,
